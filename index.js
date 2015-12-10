@@ -44,52 +44,40 @@ var pid = 0;
 
 function handleClick(state) {
 
-	if (pid) {
-		console.log('PID NAO É ZERO!');
-		return;
-	}
-
 	var child_process = require("sdk/system/child_process");
 
-	var ls = child_process.spawn('/usr/bin/ssh', ['-N', '-D 10000', 'erick@localhost']);
-	pid = ls.pid;	
-	console.log('pid: ' + pid);
+	if (pid) {
 
-	/* quando conecta, nao tem stdout */
-	ls.stdout.on('data', function (data) {
-	  console.log('stdout: ' + data);
-	});
+		console.log('kill -9 no PID ' + pid);
+		var kill = child_process.spawn('/bin/kill', ['-9', ''+ pid]);
 
-	/* se deu errado, mata o processo */
-	ls.stderr.on('data', function (data) {
-		console.log('stderr: ' + data);
-		if (pid) {
-
-			var kill = child_process.spawn('/bin/kill', ['-9', ''+ ls.pid]);
-			console.log('argument é: ' + ls.pid);
-
-			kill.stderr.on('data', function(data) {
-				console.log('ERRO NO KILL: ' + data);
-			});
-
-			console.log('killado!');
-			pid = 0;
-		}
-	});
-
-	ls.on('close', function (code) {
-	  console.log('child process exited with code ' + code);
-	  pid = 0;
-	  setProxy(HTTP);
-	});
-
-	ls.on('error', function(code) {
-	  console.log('ERRO: falha ao executar comando');
-          pid = 0;
-	  setProxy(HTTP);
-	});
+		kill.stderr.on('data', function(data) {
+			console.log('ERRO NO KILL: ' + data);
+		});
 	
-	setProxy(SOCKS);
+	} else {
 
-  //tabs.open("https://www.mozilla.org/");
+		var ls = child_process.spawn('/usr/bin/ssh', ['-N', '-D 10000', 'erick@localhost']);
+		pid = ls.pid;
+		console.log("Criada conexão SSH... PID: " + pid);
+
+		ls.stderr.on('data', function (data) {
+			console.log('stderr: ' + data);
+		});
+
+		ls.on('close', function (code) {
+		  console.log('A conexão SSH foi encerrada: ' + code);
+		  pid = 0;
+		  setProxy(HTTP);
+		});
+
+		ls.on('error', function(code) {
+		  console.log('ERRO: falha ao executar comando');
+		  pid = 0;
+		  setProxy(HTTP);
+		});
+	
+		setProxy(SOCKS);
+	}
+
 }

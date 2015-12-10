@@ -1,6 +1,9 @@
 var self = require('sdk/self');
 var buttons = require('sdk/ui/button/action');
 var tabs = require("sdk/tabs");
+var child_process = require("sdk/system/child_process");
+var Request = require("sdk/request").Request;
+
 
 var button = buttons.ActionButton({
   id: "mozilla-link",
@@ -10,11 +13,21 @@ var button = buttons.ActionButton({
 });
 
 
+
+
+  quijote = Request({
+  url: "http://www.google.com.br",
+  onComplete: function (response) {
+    console.log("status: " + response.text);
+  }
+});
+
+quijote.get();
+
+
 exports.onUnload = function (reason) {
 
 	if (pid) {
-
-		var child_process = require("sdk/system/child_process");
 
 		console.log('kill -9 no PID ' + pid);
 		var kill = child_process.spawn('/bin/kill', ['-9', ''+ pid]);
@@ -50,16 +63,17 @@ function setProxy(type) {
 		prefsvc.set("network.proxy.socks_remote_dns", true);
 		prefsvc.set("network.proxy.socks_version", 5);
 		prefsvc.set("network.proxy.share_proxy_settings", false);
+		prefsvc.set("network.proxy.http", '');
+		prefsvc.set("network.proxy.http_port", 0);
 		button.icon = "./socks.png";
 	}
+
 }
 
 
 var pid = 0;
 
 function handleClick(state) {
-
-	var child_process = require("sdk/system/child_process");
 
 	if (pid) {
 
